@@ -1,0 +1,181 @@
+<!-- index.html - Page principale du site du garagiste avec formulaires de prise et annulation de rendez-vous -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Garage Rendez-vous</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>Garage Mon Garagiste - Tests HTTP</h1>
+    <p>Testez chaque type de requête HTTP grâce aux formulaires ci-dessous.</p>
+
+     <!-- BLOC GET GROUP -->
+    <section style="border: 2px solid #ccc; padding: 1rem; margin-bottom: 2rem; border-radius: 10px;">
+        <h2>Tests GET - Global</h2>
+
+        <!-- Fichier existant -->
+        <form action="/fichier-existant.html" method="get">
+            <h3>GET - Fichier existant</h3>
+            <button type="submit">GET - Fichier existant</button>
+        </form>
+
+        <!-- Fichier inexistant -->
+        <form action="/fichier-inexistant.html" method="get">
+            <h3>GET - Fichier inexistant</h3>
+            <button type="submit">GET - Fichier inexistant</button>
+        </form>
+
+        <!-- GET - Fichier binaire (image) -->
+        <form action="/images/logo.jpg" method="get">
+            <h3>Tester GET (image PNG)</h3>
+            <button type="submit">Afficher l'image</button>
+            <p>Ou voir directement <a href="/images/logo.jpg" target="_blank">ici</a></p>
+        </form>
+
+        <!-- Fichier sans droits -->
+        <form action="/fichier-interdit.html" method="get">
+            <h3>GET - Fichier sans droits</h3>
+            <button type="submit">GET - Fichier sans droits</button>
+        </form>
+        
+        <!-- Test GET interdit -->
+        <form action="/no-method" method="get">
+            <h3>GET - location interdite (/no-method)</h3>
+            <button type="submit">Tester POST interdit</button>
+        </form>
+
+        <!-- Répertoire sans index, autoindex désactivé -->
+        <form action="/sans-index/" method="get">
+            <h3>GET - Répertoire sans index, autoindex désactivé</h3>
+            <button type="submit">GET - Dossier sans index (autoindex OFF)</button>
+        </form>
+
+        <!-- Répertoire sans index, autoindex activé -->
+        <form action="/avec-autoindex/" method="get">
+            <h3>GET - Répertoire sans index, autoindex activé</h3>
+            <button type="submit">GET - Dossier sans index (autoindex ON)</button>
+        </form>
+
+    </section>
+
+    <!-- POST -->
+    <section style="border: 1px solid #ccc; padding: 1em; margin: 2em 0; border-radius: 8px;">
+        <h2>Tests POST - Global</h2>
+
+        <!-- Test POST simple -->
+        <form action="/creer-fichier" method="post" style="margin-bottom: 1em;">
+            <h3>POST - Création de fichier</h3>
+            <label for="content1">Contenu à écrire :</label>
+            <input type="text" id="content1" name="data" value="Hello, POST simple" required>
+            <button type="submit">Envoyer POST</button>
+        </form>
+
+        <!-- Test POST multi formulaires -->
+        <form action="/prendre-rendezvous" method="post">
+            <h3>POST - Multi formulaire</h3>
+            <label for="name">Nom :</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="date">Date :</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="time">Heure :</label>
+            <input type="time" id="time" name="time" required>
+
+            <button type="submit">Envoyer POST</button>
+        </form>
+
+        <!-- Test POST interdit -->
+        <form action="/no-method" method="post">
+            <h3>POST - location interdite (/no-post)</h3>
+            <label for="forbidden-post">Contenu :</label>
+            <input type="text" id="forbidden-post" name="data" value="test">
+            <button type="submit">Tester POST interdit</button>
+        </form>
+
+        <!-- Upload de fichier (multipart/form-data) -->
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <h3>POST - Upload de Fichier</h3>
+            <label for="file">Choisissez un fichier :</label>
+            <input type="file" id="file" name="file" required>
+            <button type="submit">Envoyer Fichier</button>
+        </form>
+    </section>
+
+    <!-- DELETE -->
+    <section style="border: 1px solid #ccc; padding: 1em; margin: 2em 0; border-radius: 8px;">
+        <h2>Tests DELETE - Global</h2>
+
+        <!-- DELETE - Fichier autorisé -->
+        <form action="delete_me.txt" method="post">
+            <h3>DELETE - Fichier autorisé</h3>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Supprimer delete_me.txt</button>
+        </form>
+
+        <!-- DELETE - Fichier interdit -->
+        <form action="/no-method" method="post">
+            <h3>DELETE - Fichier interdit (/no-method)</h3>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Tester DELETE interdit</button>
+        </form>
+
+        <!-- DELETE - Fichier inexistant -->
+        <form action="/fichiers/inexistant.txt" method="post">
+            <h3>DELETE - Fichier inexistant</h3>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Supprimer inexistant.txt</button>
+        </form>
+
+        <!-- DELETE - Répertoire -->
+        <form action="/fichiers/un_dossier" method="post">
+            <h3>DELETE - Dossier (non autorisé)</h3>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Supprimer le dossier</button>
+        </form>
+    </section>
+
+
+    <!-- DELETE (via POST override) -->
+    <section>
+        <h2>Tester DELETE</h2>
+        <form action="/annuler-rendezvous" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <label for="id-rdv">ID du fichier à supprimer :</label>
+            <input type="text" id="id-rdv" name="id" placeholder="ex: test.txt" required>
+
+            <button type="submit">Envoyer DELETE</button>
+        </form>
+    </section>
+
+    <!-- Redirection -->
+    <section>
+        <h2>Tester Redirection</h2>
+        <form action="/rediriger-moi" method="get">
+            <button type="submit">Tester 301 / 302</button>
+        </form>
+    </section>
+
+            <!-- CGI - GET simple -->
+    <section>
+    <h2>CGI - GET Simple</h2>
+    <form action="/cgi-bin/test_get.py" method="get">
+        <!-- <label for="user-get">Nom :</label>
+        <input type="text" id="user-get" name="user" value="jean"> -->
+        <button type="submit">Envoyer GET</button>
+    </form>
+    </section>
+
+    <!-- CGI - POST simple -->
+    <section>
+    <h2>CGI - POST Simple</h2>
+    <form action="/cgi-bin/test_post.py" method="post">
+        <label for="user-post">Nom :</label>
+        <input type="text" id="user-post" name="user" value="paul">
+        <button type="submit">Envoyer POST</button>
+    </form>
+    </section>
+  
+</body>
+</html>
