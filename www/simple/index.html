@@ -3,11 +3,11 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Garage Rendez-vous</title>
+    <title>Tests Webserv</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>Garage Mon Garagiste - Tests HTTP</h1>
+    <h1>Tests Webserv HTTP</h1>
     <p>Testez chaque type de requête HTTP grâce aux formulaires ci-dessous.</p>
 
      <!-- BLOC GET GROUP -->
@@ -59,6 +59,21 @@
 
     </section>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <!-- POST -->
     <section style="border: 1px solid #ccc; padding: 1em; margin: 2em 0; border-radius: 8px;">
         <h2>Tests POST - Global</h2>
@@ -101,7 +116,38 @@
             <input type="file" id="file" name="file" required>
             <button type="submit">Envoyer Fichier</button>
         </form>
+
+        <form method="POST" enctype="multipart/form-data" action="/upload">
+            <input type="file" name="file1">
+            <input type="file" name="file2">
+            <input type="file" name="file3">
+            <input type="file" name="file4">
+            <input type="file" name="file5">
+            <button type="submit">Envoyer</button>
+        </form>
+
     </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- DELETE -->
     <section style="border: 1px solid #ccc; padding: 1em; margin: 2em 0; border-radius: 8px;">
@@ -128,53 +174,134 @@
             <button type="submit">Supprimer inexistant.txt</button>
         </form>
 
-        <!-- DELETE - Répertoire -->
-        <form action="/fichiers/un_dossier" method="post">
-            <h3>DELETE - Dossier (non autorisé)</h3>
+        <!-- DELETE - Répertoire (sans slash) -->
+        <form action="/delete" method="post">
+            <h3>DELETE - Dossier (sans slash)</h3>
+            <p>Supprime le dossier delete via DELETE <code>/delete</code></p>
             <input type="hidden" name="_method" value="DELETE">
-            <button type="submit">Supprimer le dossier</button>
+            <button type="submit">Tester DELETE dossier (sans slash)</button>
         </form>
+
+        <!-- DELETE - Répertoire (avec slash) -->
+        <form action="/delete/" method="post">
+            <h3>DELETE - Dossier (avec slash)</h3>
+            <p>Supprime le dossier delete via DELETE <code>/delete/</code></p>
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit">Tester DELETE dossier (avec slash)</button>
+        </form>
+
     </section>
 
 
-    <!-- DELETE (via POST override) -->
-    <section>
-        <h2>Tester DELETE</h2>
-        <form action="/annuler-rendezvous" method="post">
-            <input type="hidden" name="_method" value="DELETE">
-            <label for="id-rdv">ID du fichier à supprimer :</label>
-            <input type="text" id="id-rdv" name="id" placeholder="ex: test.txt" required>
 
-            <button type="submit">Envoyer DELETE</button>
-        </form>
-    </section>
 
-    <!-- Redirection -->
-    <section>
-        <h2>Tester Redirection</h2>
+
+
+
+
+
+
+
+
+    <!-- BLOC Divers GROUP -->
+    <section style="border: 2px solid #ccc; padding: 1rem; margin-bottom: 2rem; border-radius: 10px;">
+        <h2>Tests Divers - Global</h2>
+        
+        <!-- Redirection -->
         <form action="/rediriger-moi" method="get">
-            <button type="submit">Tester 301 / 302</button>
+            <h2>Tester Redirection</h2>
+            <button type="submit">Tester 301</button>
         </form>
+         
+        <!-- Body Size -->
+        <form action="/tiny-body" method="post">
+            <h3>POST vers location avec `client_max_body_size 0`</h3>
+            <label for="tiny-content">Texte à envoyer :</label>
+            <input type="text" id="tiny-content" name="data" value="interdit">
+            <button type="submit">Envoyer POST (devrait échouer)</button>
+        </form>
+            
+        <!-- Non implementer -->
+        </form>
+            <h3>Test - Méthode HTTP non implémentée (ex: PATCH)</h3>
+            <button onclick="testNotImplemented()">Tester PATCH (501)</button>
+        </form>
+        <script>
+            function testNotImplemented() {
+            fetch("/", {
+                method: "PATCH"
+            }).then(res => {
+                document.getElementById("patch-result").textContent =
+                `Status: ${res.status} ${res.statusText}`;
+            }).catch(err => {
+                document.getElementById("patch-result").textContent =
+                `Erreur: ${err}`;
+            });
+            }
+        </script>
     </section>
 
-            <!-- CGI - GET simple -->
-    <section>
-    <h2>CGI - GET Simple</h2>
-    <form action="/cgi-bin/test_get.py" method="get">
-        <!-- <label for="user-get">Nom :</label>
-        <input type="text" id="user-get" name="user" value="jean"> -->
-        <button type="submit">Envoyer GET</button>
-    </form>
-    </section>
 
-    <!-- CGI - POST simple -->
-    <section>
-    <h2>CGI - POST Simple</h2>
-    <form action="/cgi-bin/test_post.py" method="post">
-        <label for="user-post">Nom :</label>
-        <input type="text" id="user-post" name="user" value="paul">
-        <button type="submit">Envoyer POST</button>
-    </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- BLOC redirection GROUP -->
+    <section style="border: 2px solid #ccc; padding: 1rem; margin-bottom: 2rem; border-radius: 10px;">
+        <h2>Tests CGI - Global</h2>
+
+        <!-- CGI - GET simple -->
+        <form action="/cgi-bin/test_get.py" method="get">
+            <h3>CGI - GET Simple</h3>
+            <!-- <label for="user-get">Nom :</label>
+            <input type="text" id="user-get" name="user" value="jean"> -->
+            <button type="submit">Envoyer GET</button>
+        </form>
+
+        <!-- CGI - POST simple -->
+        <form action="/cgi-bin/test_post.py" method="post">
+            <h3>CGI - POST Simple</h3>
+            <label for="user-post">Nom :</label>
+            <input type="text" id="user-post" name="user" value="paul">
+            <button type="submit">Envoyer POST</button>
+        </form>
+
+        <!-- CGI - Test timeout -->
+        <form action="/cgi-bin/infinite_loop.py" method="get">
+            <h3>CGI - Timeout (boucle infinie)</h3>
+            <button type="submit">Lancer CGI infini</button>
+        </form>
+
+        <!-- CGI - Sortie malformée (pas de Content-Type) -->
+        <form action="/cgi-bin/bad_output.py" method="get">
+            <h3>CGI - Sortie invalide (sans header)</h3>
+            <button type="submit">Lancer CGI incorrect</button>
+        </form>
+
+        <!-- CGI - Non exécutable -->
+        <form action="/cgi-bin/forbidden_exec.py" method="get">
+            <h3>CGI - Script non exécutable (403 attendu)</h3>
+            <button type="submit">Lancer script non exécutable</button>
+        </form>
+
+        <!-- CGI - redirection -->
+        <form action="/cgi-bin/redirect.py" method="get">
+            <h3>CGI - Redirection (Location:)</h3>
+            <button type="submit">Lancer CGI Redirection</button>
+        </form>
+
+
     </section>
   
 </body>

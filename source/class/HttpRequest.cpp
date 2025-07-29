@@ -6,7 +6,7 @@
 /*   By: lechaps <lechaps@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 12:38:29 by lechaps           #+#    #+#             */
-/*   Updated: 2025/07/18 17:57:50 by lechaps          ###   ########.fr       */
+/*   Updated: 2025/07/28 21:57:35 by lechaps          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,8 @@ void HttpRequest::checkOverrideMethod() {
         if (eq != std::string::npos) {
             std::string key = pair.substr(0, eq);
             std::string value = pair.substr(eq + 1);
-            if (key == "_method" && (value == "DELETE")) {
+            if (key == "_method" && (value == "DELETE"))
+            {
                 method = value;
                 break;
             }

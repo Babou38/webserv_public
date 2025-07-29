@@ -6,7 +6,7 @@
 /*   By: lechaps <lechaps@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/05 14:44:44 by lechaps           #+#    #+#             */
-/*   Updated: 2025/07/25 10:42:25 by lechaps          ###   ########.fr       */
+/*   Updated: 2025/07/25 12:04:13 by lechaps          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,6 +240,7 @@ LocationConfig parseLocation(const std::vector<std::string>& tokens, size_t& ind
         }
         else if (tok == "methods")
         {
+            loc.methods.clear();
             loc.has_method = true;
             while (peekToken(tokens, index) != ";")
                 loc.methods.push_back(nextToken(tokens, index));
@@ -310,6 +311,8 @@ void applyInheritance(ServerConfig& server)
             if (loc.error_pages.find(it->first) == loc.error_pages.end())
                 loc.error_pages[it->first] = it->second;
         }
+        if(!loc.has_method)
+            loc.methods = server.methods;
         if (!loc.client_max_body_size_set)
             loc.client_max_body_size = server.client_max_body_size;
         if (loc.upload_store.empty())
@@ -319,9 +322,7 @@ void applyInheritance(ServerConfig& server)
         {
             if (loc.cgi.find(cgi_it->first) == loc.cgi.end())
                 loc.cgi[cgi_it->first] = cgi_it->second;
-        }
-        if (loc.methods.empty() && !server.methods.empty())
-            loc.methods = server.methods;
+        } 
     }
 }
 

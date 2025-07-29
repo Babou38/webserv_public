@@ -3,43 +3,40 @@
 Client::Client() : fd(-1), last_active(0), request_complete(false) {}
 Client::Client(int f) : fd(f), last_active(std::time(NULL)), request_complete(false) {}
 
-
-
-
 namespace HttpHandler {
     bool is_request_complete(const std::string& buffer) {
         size_t header_end = buffer.find("\r\n\r\n");
         if (header_end == std::string::npos) {
             return false;
         }
-        
+
         size_t content_length_pos = buffer.find("Content-Length:");
-        if (content_length_pos != std::string::npos && content_length_pos < header_end) {
+        if (content_length_pos != std::string::npos && content_length_pos < header_end + 4) {
             size_t value_start = content_length_pos + 15;
             size_t line_end = buffer.find("\r\n", value_start);
             if (line_end != std::string::npos) {
                 std::string length_str = buffer.substr(value_start, line_end - value_start);
                 length_str.erase(0, length_str.find_first_not_of(" \t"));
                 length_str.erase(length_str.find_last_not_of(" \t") + 1);
-                
+
                 int content_length = std::atoi(length_str.c_str());
                 size_t body_start = header_end + 4;
                 size_t current_body_length = buffer.size() - body_start;
-                
+
                 return current_body_length >= static_cast<size_t>(content_length);
             }
         }
         
         return true;
     }
-    
+
     std::string process_request(const std::string& request, const std::vector<ServerConfig>& servers) {
         try {
             HttpRequest req;
             req.parse(request);
             // displayRequest(req);
             req.checkOverrideMethod();
-            
+
             const ServerConfig& server = matchServer(req, servers);
             const LocationConfig* location = matchLocation(req.getUri(), server);
 
@@ -55,10 +52,10 @@ namespace HttpHandler {
             if (response.getStatusCode() >= 400) {
                 apply_error_page(response, config);
             }
-            
+
             // displayResponse(response);
             return response.toString();
-            
+
         } catch (const std::exception& e) {
             HttpResponse error_response(400, "Bad Request");
             error_response.setHeader("Content-Type", "text/plain");
@@ -72,6 +69,79 @@ namespace HttpHandler {
         }
     }
 }
+
+
+
+// Client::Client() : fd(-1), last_active(0), request_complete(false) {}
+// Client::Client(int f) : fd(f), last_active(std::time(NULL)), request_complete(false) {}
+
+// namespace HttpHandler {
+
+//     bool is_request_complete(const std::string& buffer) {
+//         size_t header_end = buffer.find("\r\n\r\n");
+//         if (header_end == std::string::npos) {
+//             return false;
+//         }
+        
+//         size_t content_length_pos = buffer.find("Content-Length:");
+//         if (content_length_pos != std::string::npos && content_length_pos < header_end) {
+//             size_t value_start = content_length_pos + 15;
+//             size_t line_end = buffer.find("\r\n", value_start);
+//             if (line_end != std::string::npos) {
+//                 std::string length_str = buffer.substr(value_start, line_end - value_start);
+//                 length_str.erase(0, length_str.find_first_not_of(" \t"));
+//                 length_str.erase(length_str.find_last_not_of(" \t") + 1);
+                
+//                 int content_length = std::atoi(length_str.c_str());
+//                 size_t body_start = header_end + 4;
+//                 size_t current_body_length = buffer.size() - body_start;
+                
+//                 return current_body_length >= static_cast<size_t>(content_length);
+//             }
+//         }
+        
+//         return true;
+//     }
+    
+//     std::string process_request(const std::string& request, const std::vector<ServerConfig>& servers) {
+//         try {
+//             HttpRequest req;
+//             req.parse(request);
+//             displayRequest(req);
+//             req.checkOverrideMethod();
+            
+//             const ServerConfig& server = matchServer(req, servers);
+//             const LocationConfig* location = matchLocation(req.getUri(), server);
+
+//             Config config;
+//             if (location) {
+//                 config = fromLocation(*location);
+//             } else {
+//                 config = fromServer(server);
+//             }
+
+//             HttpResponse response = dispatch(req, config);
+
+//             if (response.getStatusCode() >= 400) {
+//                 apply_error_page(response, config);
+//             }
+            
+//             displayResponse(response);
+//             return response.toString();
+            
+//         } catch (const std::exception& e) {
+//             HttpResponse error_response(400, "Bad Request");
+//             error_response.setHeader("Content-Type", "text/plain");
+//             error_response.setBody("Bad Request");
+//             return error_response.toString();
+//         } catch (...) {
+//             HttpResponse error_response(500, "Internal Server Error");
+//             error_response.setHeader("Content-Type", "text/plain");
+//             error_response.setBody("Internal Server Error");
+//             return error_response.toString();
+//         }
+//     }
+// }
 
 
 
@@ -270,22 +340,17 @@ void NetworkServer::handle_client_event(int fd, uint32_t events) {
 }
     
 bool NetworkServer::read_from_client(Client& client) {
-    char buffer[4096];
-        
+    char buf[4096];
     while (true) {
-        ssize_t bytes_read = recv(client.fd, buffer, sizeof(buffer) - 1, 0);
-            
-        if (bytes_read > 0) {
-            buffer[bytes_read] = '\0';
-            client.buffer += buffer;
+        ssize_t bytes = recv(client.fd, buf, sizeof(buf), 0);
+        if (bytes > 0) {
+            client.buffer.append(buf, bytes);
             client.last_active = std::time(NULL);
-                
-            if (client.buffer.size() > MAX_BUFFER_SIZE) {
-                return false;
-            }
+            std::cerr << "[recv] bytes=" << bytes
+                      << " total_buffer=" << client.buffer.size() << std::endl;
             continue;
         }
-        else if (bytes_read == 0) {
+        else if (bytes == 0) {
             return false;
         }
         else {
@@ -296,6 +361,35 @@ bool NetworkServer::read_from_client(Client& client) {
         }
     }
 }
+
+
+// bool NetworkServer::read_from_client(Client& client) {
+//     char buffer[4096];
+        
+//     while (true) {
+//         ssize_t bytes_read = recv(client.fd, buffer, sizeof(buffer) - 1, 0);
+            
+//         if (bytes_read > 0) {
+//             buffer[bytes_read] = '\0';
+//             client.buffer += buffer;
+//             client.last_active = std::time(NULL);
+                
+//             if (client.buffer.size() > MAX_BUFFER_SIZE) {
+//                 return false;
+//             }
+//             continue;
+//         }
+//         else if (bytes_read == 0) {
+//             return false;
+//         }
+//         else {
+//             if (errno == EAGAIN || errno == EWOULDBLOCK) {
+//                 return true;
+//             }
+//             return false;
+//         }
+//     }
+// }
     
 void NetworkServer::process_complete_request(Client& client) {
     std::string response = HttpHandler::process_request(client.buffer, servers);

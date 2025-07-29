@@ -6,7 +6,7 @@
 /*   By: lechaps <lechaps@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 17:10:01 by lechaps           #+#    #+#             */
-/*   Updated: 2025/07/20 10:57:13 by lechaps          ###   ########.fr       */
+/*   Updated: 2025/07/26 11:36:48 by lechaps          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -307,6 +307,51 @@ void parse_cgi_output(const std::string& output, HttpResponse& res)
     res.setBody(body);
 }
 
+// HttpResponse handle_cgi(const HttpRequest& req, const Config& conf)
+// {
+//     std::string script_path = conf.root + req.getUri();
+//     std::string extension;
+//     size_t dot = script_path.find_last_of(".");
+//     if (dot != std::string::npos)
+//         extension = script_path.substr(dot);
+
+//     if (conf.cgi_paths.find(extension) == conf.cgi_paths.end()) {
+//         HttpResponse res(403, "Forbidden");
+//         apply_error_page(res, conf);
+//         return res;
+//     }
+
+//     const std::string& interpreter = conf.cgi_paths.at(extension);
+
+//     int stdin_pipe[2], stdout_pipe[2];
+//     if (pipe(stdin_pipe) < 0 || pipe(stdout_pipe) < 0) {
+//         HttpResponse res(500, "Internal Server Error");
+//         apply_error_page(res, conf);
+//         return res;
+//     }
+
+//     pid_t pid = launch_cgi(interpreter, script_path, req, stdin_pipe, stdout_pipe);
+//     if (pid < 0) {
+//         HttpResponse res(500, "Internal Server Error");
+//         apply_error_page(res, conf);
+//         return res;
+//     }
+
+//     close(stdin_pipe[0]);
+//     if (req.getMethod() == "POST")
+//         write(stdin_pipe[1], req.getBody().c_str(), req.getBody().size());
+//     close(stdin_pipe[1]);
+
+//     close(stdout_pipe[1]);
+//     std::string output = read_cgi_output(stdout_pipe[0]);
+//     close(stdout_pipe[0]);
+//     waitpid(pid, NULL, 0);
+
+//     HttpResponse res(200, "OK");
+//     parse_cgi_output(output, res);
+//     return res;
+// }
+
 HttpResponse handle_cgi(const HttpRequest& req, const Config& conf)
 {
     std::string script_path = conf.root + req.getUri();
@@ -343,9 +388,35 @@ HttpResponse handle_cgi(const HttpRequest& req, const Config& conf)
     close(stdin_pipe[1]);
 
     close(stdout_pipe[1]);
-    std::string output = read_cgi_output(stdout_pipe[0]);
+
+    // timeout CGI: max 5s
+    const int TIMEOUT = 5;
+    int status = 0;
+    int elapsed = 0;
+    std::string output;
+
+    while (elapsed < TIMEOUT) {
+        pid_t result = waitpid(pid, &status, WNOHANG);
+        if (result == 0) {
+            sleep(1);
+            ++elapsed;
+        } else if (result == pid) {
+            output = read_cgi_output(stdout_pipe[0]);
+            break;
+        } else {
+            break;
+        }
+    }
+
     close(stdout_pipe[0]);
-    waitpid(pid, NULL, 0);
+
+    if (elapsed >= TIMEOUT) {
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
+        HttpResponse res(504, "Gateway Timeout");
+        apply_error_page(res, conf);
+        return res;
+    }
 
     HttpResponse res(200, "OK");
     parse_cgi_output(output, res);

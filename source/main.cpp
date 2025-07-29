@@ -14,7 +14,7 @@ int main(int argc, char** argv)
             std::cerr << "Aucune configuration trouvée" << std::endl;
             return 1;
         }
-        printConfig(servers); 
+        // printConfig(servers); 
         NetworkServer server(servers); 
         if (!server.initialize()) {
             std::cerr << "Erreur d'initialisation" << std::endl;
